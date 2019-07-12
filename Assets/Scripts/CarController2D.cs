@@ -210,7 +210,7 @@ public class CarController2D : PolygonRaycastController {
 		}
 	}
 
-	private void TryGroundWheel(Wheel airWheel, Wheel groundedWheel, Vector3 v, float vGravity) {
+	private void TryGroundWheel(Wheel airWheel, Wheel groundedWheel, Vector2 v, float vGravity) {
 		float vgrav = Mathf.Min(Mathf.Cos(transform.eulerAngles.z * Mathf.Deg2Rad) * vGravity * Time.fixedDeltaTime, -0.01f);
 		float dy = vgrav;
 
@@ -257,12 +257,12 @@ public class CarController2D : PolygonRaycastController {
 				continue;
 			}
 			hasHit = true;
-			Vector3 startingPosition = p.point;
+			Vector2 startingPosition = p.point + v;
 
-			Vector3 pDiff =  startingPosition - groundedWheel.transform.position; 
-			Vector3 rotatedPoint = Quaternion.Euler(0, 0, rotationAngle) * pDiff + groundedWheel.transform.position;
+			Vector2 pDiff =  startingPosition - (Vector2)groundedWheel.transform.position; 
+			Vector2 rotatedPoint = Quaternion.Euler(0, 0, rotationAngle) * pDiff + groundedWheel.transform.position;
 
-			Vector3 dir = (rotatedPoint - startingPosition).normalized;
+			Vector2 dir = (rotatedPoint - startingPosition).normalized;
 
 			hit = Physics2D.Linecast(startingPosition, rotatedPoint, collisionMask);
 			Debug.DrawLine(startingPosition, rotatedPoint, Color.cyan);
