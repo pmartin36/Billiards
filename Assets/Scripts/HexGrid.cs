@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using System;
 
 public class HexGrid : HexGridBasic
 {
@@ -153,7 +154,43 @@ public class HexGrid : HexGridBasic
         return posRot;
     }
 
-	public void CreateSwitches(int numSwitches = 4) {
+	public List<Tuple<int, HexCoordinates>> GetAllPositionsInDistanceRange(HexCoordinates origin, MinMax legalDistance) {
+		List<Tuple<int, HexCoordinates>> availablePositions = new List<Tuple<int, HexCoordinates>>();
+
+		HashSet<HexCoordinates> hexes = new HashSet<HexCoordinates>();
+		hexes.Add(origin);
+
+		HashSet<HexCoordinates> inspectedHexes = new HashSet<HexCoordinates>();
+
+		bool addedNew = true;
+		int distance = 0;
+		while (addedNew && distance < legalDistance.Max) {
+			addedNew = false;
+			var hexesList = hexes.ToList();
+			foreach (HexCoordinates hex in hexesList) {
+				HexCoordinates[] neighbors = hex.GetNeighbors();
+
+				foreach (HexCoordinates n in neighbors) {
+					Vector3Int rep = n.GetRepresentationalCoordinates();
+					if (WithinGridBounds(rep) && !inspectedHexes.Contains(n) && !cellInfo[n].Filled) {
+						addedNew = true;
+						hexes.Add(n);
+						inspectedHexes.Add(n);
+					}
+				}
+
+				if(distance > legalDistance.Min) {
+					availablePositions.Add(Tuple.Create(distance, hex));
+				}
+				hexes.Remove(hex);
+			}
+			distance++;
+		}
+
+		return availablePositions;
+	}
+
+	public void CreateHolesAndBalls(int numHoles = 4, MinMax ballDistance = null) {
 		// divide entire grid up into 9 zones in a 3x3 formation,
 		// remove the zones with the start and end point
 		// select `numSwitches` zones to put switches in
@@ -184,7 +221,7 @@ public class HexGrid : HexGridBasic
 		List<int> availableZones = Enumerable.Range(0, 9).Where(e => e != startZone && e != endZone).ToList();
 
 		List<int> switchZones = new List<int>();
-		for(int i = 0; i < numSwitches; i++) {
+		for(int i = 0; i < numHoles; i++) {
 			int num = UnityEngine.Random.Range(0, availableZones.Count);
 			switchZones.Add(availableZones[num]);
 			availableZones.RemoveAt(num);
@@ -225,6 +262,8 @@ public class HexGrid : HexGridBasic
 			return HexCoordinates.FromRepresentationalCoordinates(xGridPos, yGridPos);
 		}
 
+		List<HexCoordinates> holeHexes = new List<HexCoordinates>();
+
 		for(int i = 0; i < switchZones.Count; i++) {
 			bool foundPosition = false;
 			int attempts = 0;
@@ -234,9 +273,9 @@ public class HexGrid : HexGridBasic
 				do {
 					HexCoordinates h = getRandomHexInZone(zone);
 					if(cellInfo[h].Reachable && cellInfo[h].NumTouchedWalls > 0) {
-						Switch s = Switch.CreateInstance();
-						s.GridPosition = h;
-						s.Place(this);
+						Hole s = Hole.CreateInstance();
+						s.Place(this, h);
+						holeHexes.Add(h);
 						foundPosition = true;
 						Debug.Log($"Found in zone {zone} in {attempts} attempts");
 					}
@@ -251,6 +290,19 @@ public class HexGrid : HexGridBasic
 					availableZones.RemoveAt(num);
 				}
 			}
+		}
+
+		if(ballDistance == null) {
+			ballDistance = new MinMax(3, 6);
+		}
+
+		foreach(HexCoordinates h in holeHexes) {
+			int targetDistance = UnityEngine.Random.Range(ballDistance.Min, ballDistance.Max);
+			var positions = GetAllPositionsInDistanceRange(h, ballDistance);
+			var position = positions.Where(p => cellInfo[p.Item2].NumTouchedWalls <= 3).OrderBy(p => Mathf.Abs(p.Item1 - targetDistance)).First();
+
+			Ball b = Ball.CreateInstance();
+			b.Place(this, position.Item2);
 		}
 	}
 }

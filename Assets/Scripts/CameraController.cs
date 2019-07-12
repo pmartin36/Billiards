@@ -4,7 +4,8 @@ using UnityEngine;
 
 public class CameraController : MonoBehaviour
 {
-	private CameraFollowable Following = null;
+	public CameraFollowable Following = null;
+	public bool FollowingTransition = false;
 	private Vector3 Position { set => transform.position = new Vector3(value.x, value.y, -10); }
 
 	private Camera cam;
@@ -15,7 +16,7 @@ public class CameraController : MonoBehaviour
     }
 
     void Update() {
-        if(Following != null) {
+        if(Following != null && !FollowingTransition) {
 			Position = Following.Position;
 		}
     }
@@ -25,6 +26,28 @@ public class CameraController : MonoBehaviour
 		this.Following = lm.Player.GetComponent<CameraFollowable>();
 		cam.orthographicSize = 5f;
 		Position = Following.Position;
+	}
+
+	public void SetFollowing(CameraFollowable f, System.Action completedTransitionCallback) {
+		if(Following != null && f != Following) {
+			StartCoroutine(TransitionFollowing(f, completedTransitionCallback));
+		}
+		else if (f != Following) {
+			Following = f;
+			completedTransitionCallback?.Invoke();
+		}
+	}
+
+	private IEnumerator TransitionFollowing(CameraFollowable newFollowable, System.Action completedTransitionCallback) {
+		float time = 0;
+		FollowingTransition = true;
+		while (time <= 1f) {
+			Position = Vector3.Lerp(Following.Position, newFollowable.Position, Mathf.SmoothStep(0f, 1f, time+=Time.deltaTime));
+			yield return null;
+		}
+		FollowingTransition = false;
+		Following = newFollowable;
+		completedTransitionCallback?.Invoke();	
 	}
 }
 

@@ -12,10 +12,10 @@ public class Switch : Tower {
 	
 	public bool Activated { get; set; }
 
-	public static GameObject switchPrefab;
+	public static GameObject Prefab;
 	public new static Switch CreateInstance() {
-		switchPrefab = Resources.Load<GameObject>("Prefabs/Switch");
-		return Instantiate(switchPrefab).GetComponentInChildren<Switch>();
+		Prefab = Resources.Load<GameObject>("Prefabs/Switch");
+		return Instantiate(Prefab).GetComponentInChildren<Switch>();
 	}
 
 	public override void Touched() {

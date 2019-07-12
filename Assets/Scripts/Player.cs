@@ -11,8 +11,10 @@ public class Player : LineRider, CameraFollowable
 
 	private SpriteRenderer spriteRenderer;
 
+	public bool Frozen { get; set; }
+
 	// Physics
-	private Controller2D controller;
+	private CarController2D controller;
 	private float velocityXSmoothing;
 
 	public float MaxJumpHeight;
@@ -48,11 +50,12 @@ public class Player : LineRider, CameraFollowable
 	// Camera Followable
 	public Vector2 Velocity { get => velocity; }
 	public Vector2 Position { get => transform.position; }
+	public float Speed { get => moveSpeed; }
 
 	protected override void Start() {
 		base.Start();
 		IsConnected = true;
-		controller = GetComponent<Controller2D>();
+		controller = GetComponent<CarController2D>();
 		spriteRenderer = GetComponent<SpriteRenderer>();
 
 		gravity = -(2 * MaxJumpHeight) / Mathf.Pow(TimeToJumpApex, 2);
@@ -75,10 +78,20 @@ public class Player : LineRider, CameraFollowable
 		availableJumpCount = 2;
 	}
 
-	public void SetActive(Tower startTower) {
-		Active = true;
-		spriteRenderer.color = Color.yellow;
+	public void BeginLevel(Tower startTower) {
+		SetActive(true);
+		spriteRenderer.color = Color.white;
 		SelectLine(startTower);
+	}
+
+	public void SetActive(bool active) {
+		if(active && !Frozen) {
+			Active = true;
+		}
+		else if(!active) {
+			Active = false;
+		}
+		controller.collider.enabled = Active;
 	}
 
 	public void HandleInput(InputPackage p) {
@@ -86,21 +99,19 @@ public class Player : LineRider, CameraFollowable
 			inputDirection = Vector2.zero;
 			OnJumpInputUp();
 			return;
-		} 
-
-		if(!HasEnergy) {
-			// TODO: Player should continue falling in the same direction they were going when they had energy
-			// and level should fail when they hit the ground
-			OnJumpInputUp();
+		} else if (!Active) {
+			if(p.Enter) {
+				SetActive(true);
+			}
 			return;
 		}
 
 		inputDirection = new Vector3(p.Horizontal, p.Vertical);
 
-		if(p.Drop && !lastInput.Drop) {
-			Disconnect(false);
-			availableJumpCount--;
-		}
+		//if(p.Drop && !lastInput.Drop) {
+		//	Disconnect(false);
+		//	availableJumpCount--;
+		//}
 
 		if(p.Dash && !lastInput.Dash) {
 			StartDash();
@@ -160,45 +171,24 @@ public class Player : LineRider, CameraFollowable
 						moveSpeed -= ms;
 					}
 				}
-				SetEnergy(Time.fixedDeltaTime * 5f);
 			}
 			else {
-				float speedLossModifier = 0.25f;
-
 				// calculate velocity regardless, we want to use velocity to determine lineSpeed so this needs to constantly be updated with user direction
 				CalculateVelocity(); 
+	
+				Vector2 v = velocity * Time.fixedDeltaTime;
+				controller.Move(ref v, inputDirection);
 
-				if (dashing) {
-					controller.Move(dashVelocity * Time.fixedDeltaTime, inputDirection, out Vector2 vdiff);
-					if (Time.time - dashStartTime > dashTime) {
-						dashing = false;
-					}
-					velocity.y = 0;
-				}
-				else {
-					controller.Move(velocity * Time.fixedDeltaTime, inputDirection, out Vector2 vdiff);
-					velocity += vdiff / Time.fixedDeltaTime;
-
-					if (controller.collisions.below) {
-						if (controller.collisions.slidingDownMaxSlope) {
-							velocity.y += controller.collisions.slopeNormal.y * -gravity * Time.fixedDeltaTime;
-						}
-						else {
-							velocity.y = 0;
-						}
-						ResetDashAndJump();
-						speedLossModifier = 1f;
-					}
-					else if (controller.collisions.above && !controller.collisions.ridingSlopedWall) {
+				if (controller.collisions.below) {
+					ResetDashAndJump();
+					if(!controller.collisions.climbingSlope) {
 						velocity.y = 0;
 					}
 				}
-				
-				if(moveSpeed > minSpeed) {
-					moveSpeed -= moveSpeed * speedLossModifier * Time.fixedDeltaTime;
+				else if (controller.collisions.above && !controller.collisions.ridingSlopedWall) {
+					velocity.y = 0;
 				}
-
-				SetEnergy(-Time.fixedDeltaTime / 2f);
+				
 				base.NonLineActions();
 			}
 		}
@@ -206,22 +196,6 @@ public class Player : LineRider, CameraFollowable
 
 	void Update() {
 		GameManager.Instance.LevelManager.UpdateUIFromPlayer(energy);
-	}
-
-	private void SetEnergy(float delta) {
-		energy = Mathf.Clamp(energy + delta, 0, maxEnergy);
-		if(energy > 0) {
-			HasEnergy = true;
-		}
-		else {
-			HasEnergy = false;
-			if(controller.collisions.below) {
-				// TODO, this should actually be a loss but we're doing a switch level to fake death
-				Active = false;
-				inputDirection = Vector2.zero;
-				GameManager.Instance.LevelManager.SwitchLevel(1);
-			}
-		}
 	}
 
 	protected void Disconnect(bool up) {
@@ -254,19 +228,19 @@ public class Player : LineRider, CameraFollowable
 	}
 
 	protected override void Connect(RaycastHit2D hit) {
-		if(!lastInput.Drop && hit.collider.gameObject != disabledLine?.gameObject) {
-			base.Connect(hit);
-			var d = ConnectedLine.Positions[index].Direction;
+		//if(!lastInput.Drop && hit.collider.gameObject != disabledLine?.gameObject) {
+		//	base.Connect(hit);
+		//	var d = ConnectedLine.Positions[index].Direction;
 
-			float dot = Vector2.Dot(velocity.normalized, d.normalized);
-			float modifier = Mathf.Abs(dot) > 0.8f ? 1.25f : 1.0f;
+		//	float dot = Vector2.Dot(velocity.normalized, d.normalized);
+		//	float modifier = Mathf.Abs(dot) > 0.8f ? 1.25f : 1.0f;
 
-			LineSpeed = Mathf.Clamp(Mathf.Abs(velocity.x) * modifier + Mathf.Abs(velocity.y) * 0.25f, minSpeed, maxSpeed);
-			Debug.Log($"Joining line at {velocity} - line velocity is {LineSpeed} - dot was {dot}");
+		//	LineSpeed = Mathf.Clamp(Mathf.Abs(velocity.x) * modifier + Mathf.Abs(velocity.y) * 0.25f, minSpeed, maxSpeed);
+		//	Debug.Log($"Joining line at {velocity} - line velocity is {LineSpeed} - dot was {dot}");
 
-			ResetDashAndJump();
-			dashing = false;
-		}
+		//	ResetDashAndJump();
+		//	dashing = false;
+		//}
 	}
 
 	public void OnJumpInputDown() {
@@ -328,7 +302,9 @@ public class Player : LineRider, CameraFollowable
 
 	void CalculateVelocity() {
 		float targetVelocityX = inputDirection.x * moveSpeed;
-		velocity.x = Mathf.SmoothDamp(velocity.x, targetVelocityX, ref velocityXSmoothing, (controller.collisions.below) ? .1f : .2f);
+		float pmove = Mathf.SmoothDamp(velocity.x, targetVelocityX, ref velocityXSmoothing, (controller.collisions.below) ? .1f : .2f);
+		velocity.x = Mathf.Cos(transform.rotation.z * Mathf.Deg2Rad) * pmove;
+		velocity.y += Mathf.Sin(transform.rotation.z * Mathf.Deg2Rad) * pmove;
 		velocity.y += gravity * Time.fixedDeltaTime;	
 	}
 

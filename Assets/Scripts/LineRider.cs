@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class LineRider : MonoBehaviour
 {
-	public bool Active { get; set; }
+	public bool Active { get; protected set; }
     public bool IsConnected { get; set; }
 	public Line ConnectedLine { get; protected set; }
 

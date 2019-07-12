@@ -21,11 +21,14 @@ public class InputManager : MonoBehaviour
 		p.RightMouse = Input.GetButton("RightMouse");
 
 		p.Shift = Input.GetKey(KeyCode.LeftShift);
-
 		p.Enter = Input.GetButtonDown("Enter");
-		p.Drop = Input.GetButton("Drop");
+
+		p.GasAmount = Input.GetAxis("Gas");
+		p.Break = Input.GetButton("Break");
+
 		p.Dash = Input.GetButtonDown("Dash");
 		p.Jump = Input.GetButton("Jump");
+
 		p.Horizontal = Input.GetAxis("Horizontal");
 		p.Vertical = Input.GetAxis("Vertical");
 
@@ -43,7 +46,8 @@ public class InputPackage {
 	public bool Shift { get; set; }
 
 	public bool Enter { get; set; }
-	public bool Drop { get; set; }
+	public float GasAmount { get; set; }
+	public bool Break { get; set; }
 	public bool Dash { get; set; }
 	public bool Jump { get; set; }
 	public float Horizontal { get; set; }

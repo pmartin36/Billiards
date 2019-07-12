@@ -40,7 +40,7 @@ public class LevelManager : ContextManager
 
 	// For Play Mode
 	public Player playerPrefab;
-	public Player Player { get; set; }
+	public PlayerCar Player { get; set; }
 	public Tower StartTower { get => Grid.StartingPoint.TowerHead; }
 
 	// Win Conditions
@@ -70,7 +70,7 @@ public class LevelManager : ContextManager
 
 				WinCondition = new SwitchWinCondition(Depth);
 				if (LevelData == null) {
-					Grid.CreateSwitches(WinCondition.Total);
+					Grid.CreateHolesAndBalls(WinCondition.Total);
 				}
 				break;
 			case LevelType.Tiles:
@@ -95,14 +95,14 @@ public class LevelManager : ContextManager
 		Tower = Tower.CreateInstance();
 		Tower.transform.localScale = Vector3.one * Grid.OuterRadius * Tower.transform.localScale.x / 2f;
 
-		Canvas.InitEnergySlider(GameManager.Instance.PlayerData.MaxEnergy);
+		// Canvas.InitEnergySlider(GameManager.Instance.PlayerData.MaxEnergy);
     }
 
 	public void GridGenerated(object sender, HexGrid grid) {
 		this.Grid = grid;
 		// start the game
-		Player = Instantiate(playerPrefab, grid.StartingPoint.PhysicalCoordinates, Quaternion.identity);
-		Player.Init(grid.StartingPoint.TowerHead, GameManager.Instance.PlayerData);
+		// Player = Instantiate(playerPrefab, grid.StartingPoint.PhysicalCoordinates, Quaternion.identity);
+		// Player.Init(grid.StartingPoint.TowerHead, GameManager.Instance.PlayerData);
 	}
 
 	private void SetCameraPosition(Vector3 position) {
@@ -136,27 +136,29 @@ public class LevelManager : ContextManager
 
 		Tower t = Grid.StartingPoint.TowerHead;
 		t.Place(Grid);
-		Player.SetActive(t);
+		// Player.BeginLevel(t);
 	}
 
 	public override void HandleInput(InputPackage p) {
 		// Common Input
 
-		if(InPlacementMode) {
-			if (p.Enter) {
-				LeavePlacementMode();
-			}
-			else {
-				PlacementModeInput(p);
-			}
-		}
-		else {
-			PlayModeInput(p);
-		}	
+		//if(InPlacementMode) {
+		//	if (p.Enter) {
+		//		LeavePlacementMode();
+		//	}
+		//	else {
+		//		PlacementModeInput(p);
+		//	}
+		//}
+		//else {
+		//	PlayModeInput(p);
+		//}	
+
+		PlayModeInput(p);
 	}
 
 	public void PlayModeInput(InputPackage p) {
-		Player.HandleInput(p);
+		Player?.HandleInput(p);
 	}
 
 	public void PlacementModeInput(InputPackage p) {
@@ -282,7 +284,7 @@ public class LevelManager : ContextManager
 	}
 
 	public void UpdateUIFromPlayer(float energy) {
-		Canvas.UpdateEnergySlider(energy);
+		// Canvas.UpdateEnergySlider(energy);
 	}
 
 	private void OnDestroy() {

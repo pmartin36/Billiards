@@ -215,7 +215,7 @@ public class HexGridBasic : MonoBehaviour
 		}
 	}
 
-	private void GenerateNumWallsMap(HexCoordinates origin) {
+	protected void GenerateNumWallsMap(HexCoordinates origin) {
 		HashSet<HexCoordinates> hexes = new HashSet<HexCoordinates>();
 		hexes.Add(origin);
 
@@ -262,7 +262,7 @@ public class HexGridBasic : MonoBehaviour
 		}
 	}
 
-	private void SetStartEnd() {
+	protected void SetStartEnd() {
 		int xs, ys, xe, ye;
 		xs = UnityEngine.Random.Range(0, width);
 		ys = UnityEngine.Random.Range(height - 2, height);
@@ -283,7 +283,7 @@ public class HexGridBasic : MonoBehaviour
 		cellInfo.Add(aboveStart.Coordinates, aboveStart);
 	}
 
-	private void CreateWallBorder() {
+	protected void CreateWallBorder() {
 		for(int x = -1; x <= width; x++) {
 			HexInfo h1 = new HexInfo(x, -1, metrics, true, false, false);
 			HexInfo h2 = new HexInfo(x, height, metrics, true, false, false);
@@ -299,10 +299,10 @@ public class HexGridBasic : MonoBehaviour
 		}
 	}
 
-	private bool WithinGridBounds(int x, int y) {
+	protected bool WithinGridBounds(int x, int y) {
 		return x >= 0 && x < width && y >= 0 && y < height;
 	}
-	private bool WithinGridBounds(Vector3Int point) {
+	protected bool WithinGridBounds(Vector3Int point) {
 		return WithinGridBounds(point.x, point.y);
 	}
 
