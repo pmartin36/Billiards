@@ -17,6 +17,8 @@ public struct CollisionInfo {
 	public int faceDir;
 	public bool fallingThroughPlatform;
 
+	public RaycastHit2D lowestHit;
+
 	public void Reset() {
 		above = below = false;
 		left = right = false;
@@ -29,5 +31,13 @@ public struct CollisionInfo {
 
 		slopeAngleOld = slopeAngle;
 		slopeAngle = 0;
+
+		lowestHit = new RaycastHit2D();
+	}
+
+	public void TrySetLowestHit(RaycastHit2D hit) {
+		if(hit.collider != null && (lowestHit.collider == null || hit.point.y < lowestHit.point.y)) {
+			lowestHit = hit;
+		}
 	}
 }

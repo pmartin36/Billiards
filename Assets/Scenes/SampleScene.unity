@@ -298,7 +298,7 @@ GameObject:
   - component: {fileID: 330150211}
   - component: {fileID: 330150210}
   - component: {fileID: 330150209}
-  m_Layer: 8
+  m_Layer: 11
   m_Name: Back Wheel
   m_TagString: Player
   m_Icon: {fileID: 0}
@@ -1270,7 +1270,7 @@ GameObject:
   - component: {fileID: 1094733654}
   - component: {fileID: 1094733653}
   - component: {fileID: 1094733652}
-  m_Layer: 8
+  m_Layer: 11
   m_Name: Front Wheel
   m_TagString: Player
   m_Icon: {fileID: 0}
@@ -1990,12 +1990,12 @@ PrefabInstance:
     - target: {fileID: 521413076670388092, guid: 3cb56d99a4fdc2e4aabb82a919139265,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 36.2
+      value: 37.79
       objectReference: {fileID: 0}
     - target: {fileID: 521413076670388092, guid: 3cb56d99a4fdc2e4aabb82a919139265,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: -39.75
+      value: -39.68
       objectReference: {fileID: 0}
     - target: {fileID: 521413076670388092, guid: 3cb56d99a4fdc2e4aabb82a919139265,
         type: 3}
@@ -2109,12 +2109,14 @@ PolygonCollider2D:
       - {x: 0.71999997, y: 0.24}
       - {x: -0.93, y: 0.24}
       - {x: -0.96, y: 0.21}
-      - {x: -1.25, y: -0.5}
-      - {x: -1.28, y: -0.57}
-      - {x: -1.28, y: -0.64}
-      - {x: 1.28, y: -0.64}
-      - {x: 1.28, y: -0.39999998}
-      - {x: 1.27, y: -0.39}
+      - {x: -1.160302, y: -0.35423318}
+      - {x: -1.0866098, y: -0.36539972}
+      - {x: -0.9786768, y: -0.43577412}
+      - {x: -0.92426825, y: -0.52930576}
+      - {x: -0.9156507, y: -0.6034808}
+      - {x: 1.00184, y: -0.6147094}
+      - {x: 1.0397675, y: -0.46040946}
+      - {x: 1.2124003, y: -0.35207048}
 --- !u!114 &1796413323
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -20,6 +20,8 @@ public class Wheel : MonoBehaviour
 		}
 	}
 
+	public float vGravity { get; set; }
+
     void Start() {
 		parent = GetComponentInParent<Car>();
 		circ = GetComponent<CircleCollider2D>();
@@ -27,10 +29,22 @@ public class Wheel : MonoBehaviour
 		spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
-	public bool UpdateIsTouchingGround() {
+	public void AddGravity(float deltaGravity) {
+		if(!IsTouchingGround) {
+			vGravity += deltaGravity;
+		}
+	}
+
+	public void UpdateIsTouchingGround() {
 		Collider2D hit = Physics2D.OverlapCircle(transform.position, Radius, layerMask);
-		IsTouchingGround = hit != null;
-		return IsTouchingGround;
+		if(hit != null) {
+			IsTouchingGround = true;
+			vGravity = 0;
+		}
+		else {
+			IsTouchingGround = false;
+			
+		}
 	}
 
 	public RaycastHit2D Cast(Vector2 dir, float length, float skinWidth = 0.015f) {

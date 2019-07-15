@@ -12,6 +12,7 @@ public class CarController2D : PolygonRaycastController {
 	public Wheel FrontWheel { get; set; }
 	public Wheel BackWheel { get; set; }
 	public bool BothWheelsTouchingGround { get => FrontWheel.IsTouchingGround && BackWheel.IsTouchingGround; }
+	public bool EitherWheelTouchingGround { get => FrontWheel.IsTouchingGround || BackWheel.IsTouchingGround; }
 
 	private float maxAngleDiff = 61f;
 	private float distBetweenWheels;
@@ -79,6 +80,7 @@ public class CarController2D : PolygonRaycastController {
 		}
 
 		if(wheelHit.collider != null) {
+			collisions.TrySetLowestHit(wheelHit);
 			if (collisions.descendingSlope) {
 				collisions.descendingSlope = false;
 				moveAmount = collisions.moveAmountOld;
@@ -178,6 +180,7 @@ public class CarController2D : PolygonRaycastController {
 		HandleVerticalHit(hit, ref moveAmount, ref rayLength, directionY);
 		if(hit.collider != null) {
 			Debug.DrawLine(wheel.transform.position, hit.point, Color.blue);
+			collisions.TrySetLowestHit(hit);
 		}
 	}
 
@@ -195,23 +198,35 @@ public class CarController2D : PolygonRaycastController {
 		}
 	}
 
-	public void RotationCollisions(Vector2 moveAmount, float vGravity) {
-		bool fwTouch = FrontWheel.UpdateIsTouchingGround();
-		bool bwTouch = BackWheel.UpdateIsTouchingGround();
-		if (!bwTouch && fwTouch) {
+	public void RotationCollisions(Vector2 moveAmount, float deltaGravity) {
+		FrontWheel.UpdateIsTouchingGround();
+		BackWheel.UpdateIsTouchingGround();
+
+		if(!BothWheelsTouchingGround) {
+			if (moveAmount.y > 0.0001f && !collisions.climbingSlope) {
+				FrontWheel.vGravity = 0;
+				BackWheel.vGravity = 0;
+			}
+			else {
+				FrontWheel.AddGravity(deltaGravity);
+				BackWheel.AddGravity(deltaGravity);
+			}
+		}
+
+		if (!BackWheel.IsTouchingGround && FrontWheel.IsTouchingGround) {
 			// affect by gravity + slope movement
-			TryGroundWheel(BackWheel, FrontWheel, moveAmount, vGravity);
+			TryGroundWheel(BackWheel, FrontWheel, moveAmount);
 		}
-		else if (!fwTouch && bwTouch) {
-			TryGroundWheel(FrontWheel, BackWheel, moveAmount, vGravity);
+		else if (!FrontWheel.IsTouchingGround && BackWheel.IsTouchingGround) {
+			TryGroundWheel(FrontWheel, BackWheel, moveAmount);
 		}
-		else if(!fwTouch && !bwTouch) {
+		else if(!EitherWheelTouchingGround) {
 
 		}
 	}
 
-	private void TryGroundWheel(Wheel airWheel, Wheel groundedWheel, Vector2 v, float vGravity) {
-		float vgrav = Mathf.Min(Mathf.Cos(transform.eulerAngles.z * Mathf.Deg2Rad) * vGravity * Time.fixedDeltaTime, -0.01f);
+	private void TryGroundWheel(Wheel airWheel, Wheel groundedWheel, Vector2 v) {
+		float vgrav = Mathf.Min(Mathf.Cos(transform.eulerAngles.z * Mathf.Deg2Rad) * airWheel.vGravity * Time.fixedDeltaTime, -0.01f);
 		float dy = vgrav;
 
 		// when top wheel has crested the slope, we don't want to drag it down from the bottom wheel

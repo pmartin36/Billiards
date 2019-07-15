@@ -35,21 +35,16 @@ public class Car : MonoBehaviour
 	protected virtual void FixedUpdate() {
         Vector2 dir = Utils.AngleToVector(transform.eulerAngles.z + 90);
 
-		bool fwTouch = controller.FrontWheel.UpdateIsTouchingGround();
-		bool bwTouch = controller.BackWheel.UpdateIsTouchingGround();
-		CalculateVelocity(fwTouch, bwTouch);
+		controller.FrontWheel.UpdateIsTouchingGround();
+		controller.BackWheel.UpdateIsTouchingGround();
+		CalculateVelocity();
 
 		Vector2 v = velocity * Time.fixedDeltaTime;
 		controller.Move(ref v, inputDirection);
 
-		controller.RotationCollisions(v, vGravity);
+		controller.RotationCollisions(v, gravity * Time.fixedDeltaTime);
 
-		// update non-touching tires		
-		if(controller.BothWheelsTouchingGround && Mathf.Abs(v.y) <= 0.01f) {
-			vGravity = 0;
-		}
-
-		if (v.y > 0.0001f) {
+		if (v.y > -0.000001f) {
 			velocity.y = (v.y / Time.fixedDeltaTime);
 			vGravity = 0f;
 		}
@@ -66,11 +61,11 @@ public class Car : MonoBehaviour
 
 	
 
-	protected void CalculateVelocity(bool frontWheelTouching, bool backWheelTouching) {
+	protected void CalculateVelocity() {
 		vGravity += gravity * Time.fixedDeltaTime;
 		Vector2 v = Vector2.up * vGravity;
 		Vector2 delta = Vector2.zero;
-		if(frontWheelTouching || backWheelTouching) {
+		if(controller.EitherWheelTouchingGround) {
 			delta = GetHorizontalMoveDelta() * Vector2.right * Time.fixedDeltaTime;
 			// TODO: Implement Max Speed
 		
